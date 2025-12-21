@@ -33,6 +33,8 @@ logs/
 # Environment files
 .env
 .env.*
+secrets.py
+config.py
 
 # Data, models, outputs
 data/
