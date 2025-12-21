@@ -1,0 +1,60 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+pip-wheel-metadata/
+
+# Virtual environments
+venv/
+env/
+.venv/
+ENV/
+venv.bak/
+
+# IDEs and editors
+.vscode/
+.idea/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs and databases
+*.log
+*.sqlite3
+*.db
+logs/
+*.pid
+
+# Environment files
+.env
+.env.*
+
+# Data, models, outputs
+data/
+datasets/
+models/
+checkpoints/
+*.ckpt
+*.h5
+*.pt
+
+# macOS/Windows
+.DS_Store
+Thumbs.db
+
+# Testing
+.pytest_cache/
+.coverage
+coverage.xml
+
+# Mypy
+.mypy_cache/
+
+# Misc
+*.swp
+*.swo
