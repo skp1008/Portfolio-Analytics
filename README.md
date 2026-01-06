@@ -1,20 +1,17 @@
-# Real-Time-Stock-Prediction
+# Real-Time-Stock-Analysis
 
-Loading data from stock exchange API, storing in Azure Data Warehouse, forecasting returns with Gradient Boosting, and displaying results with React.js Dashboard.
+A real-time stock prediction system that loads data from stock exchange APIs, stores it in Azure Data Warehouse, forecasts returns using Gradient Boosting models, and displays results through a React.js dashboard.
 
-## Overview
+## Steps
 
-This project implements a real-time stock prediction system that:
-- Fetches data from stock exchange APIs
-- Stores data in Azure Data Warehouse
-- Forecasts returns using Gradient Boosting models
-- Displays results through a React.js dashboard
+1. **Data Pipeline – Fetch, Clean, Store (Completed ✅)**  
+   - Fetching, cleaning, and storing stock data in an Azure cloud data warehouse.
 
-## Setup
+2. **Gradient Boosting Forecasting Model (In Progress ⏳)**  
+   - Gradient boosting–based forecasting model to determine whether a stock’s price will be higher or lower in one week.
 
-Coming soon...
+3. **Model Backtesting (Planned)**  
+   - Backtesting framework to evaluate model performance over historical periods.
 
-## Usage
-
-Coming soon...
-
+4. **React.js Dashboard (Planned)**  
+   - React.js dashboard with portfolio analytics and performance metrics.
