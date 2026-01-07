@@ -60,3 +60,13 @@ coverage.xml
 # Misc
 *.swp
 *.swo
+
+# React build
+dashboard/build/
+dashboard/node_modules/
+
+# Figures
+figures/
+*.png
+*.jpg
+*.pdf

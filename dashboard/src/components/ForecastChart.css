@@ -1,0 +1,50 @@
+.forecast-chart {
+  width: 100%;
+}
+
+.forecast-header {
+  margin-bottom: 1.5rem;
+}
+
+.forecast-header h3 {
+  font-size: 1.3rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.forecast-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.forecast-chart-item {
+  text-align: center;
+}
+
+.forecast-chart-item h4 {
+  font-size: 1.1rem;
+  color: #667eea;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.forecast-tooltip {
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tooltip-label {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: #333;
+}
+
+.tooltip-value {
+  color: #666;
+  font-size: 0.9rem;
+}
+

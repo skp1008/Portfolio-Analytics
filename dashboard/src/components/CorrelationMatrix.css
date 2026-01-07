@@ -1,0 +1,81 @@
+.correlation-matrix {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.matrix-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.correlation-table {
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 800px;
+  font-size: 0.9rem;
+}
+
+.correlation-table th {
+  background-color: #667eea;
+  color: white;
+  padding: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.correlation-table th:first-child {
+  left: 0;
+  z-index: 11;
+  background-color: #5568d3;
+}
+
+.correlation-table td {
+  padding: 0.75rem;
+  text-align: center;
+  font-weight: 500;
+  border: 1px solid #e0e0e0;
+  transition: transform 0.2s;
+}
+
+.correlation-table td:hover {
+  transform: scale(1.1);
+  z-index: 5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.correlation-table tbody tr th {
+  background-color: #5568d3;
+  color: white;
+  font-weight: 600;
+  position: sticky;
+  left: 0;
+  z-index: 9;
+}
+
+.color-legend {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.legend-color {
+  width: 30px;
+  height: 20px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+

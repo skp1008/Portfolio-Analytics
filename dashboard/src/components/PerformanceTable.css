@@ -1,0 +1,54 @@
+.performance-table {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table-container {
+  width: 100%;
+}
+
+.performance-table table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.performance-table thead th {
+  background-color: #667eea;
+  color: white;
+  padding: 1rem;
+  text-align: center;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.performance-table tbody td {
+  padding: 0.75rem 1rem;
+  text-align: center;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.performance-table tbody tr:hover {
+  background-color: #f5f7fa;
+}
+
+.period-cell {
+  font-weight: 600;
+  background-color: #f8f9fa;
+  color: #333;
+}
+
+.value-cell {
+  font-weight: 500;
+}
+
+.value-cell.positive {
+  color: #10b981;
+}
+
+.value-cell.negative {
+  color: #ef4444;
+}
+
