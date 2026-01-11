@@ -10,6 +10,8 @@ import plotly.express as px
 from datetime import datetime, timedelta
 import json
 import os
+from urllib.request import urlopen
+from PIL import Image
 
 
 def load_cached_results():
@@ -45,6 +47,86 @@ def get_stock_data_for_period(stock_data_df, ticker, period_start, period_end):
         pct_change = 0
     
     return period_data, pct_change
+
+
+def get_stock_logo_url(ticker):
+    """Get logo URL for a stock ticker."""
+    # Mapping of common tickers to logo URLs (using finnhub or similar services)
+    logo_mapping = {
+        'AAPL': 'https://logo.clearbit.com/apple.com',
+        'MSFT': 'https://logo.clearbit.com/microsoft.com',
+        'GOOGL': 'https://logo.clearbit.com/google.com',
+        'GOOG': 'https://logo.clearbit.com/google.com',
+        'AMZN': 'https://logo.clearbit.com/amazon.com',
+        'META': 'https://logo.clearbit.com/meta.com',
+        'FB': 'https://logo.clearbit.com/meta.com',
+        'TSLA': 'https://logo.clearbit.com/tesla.com',
+        'NVDA': 'https://logo.clearbit.com/nvidia.com',
+        'JPM': 'https://logo.clearbit.com/jpmorgan.com',
+        'JNJ': 'https://logo.clearbit.com/jnj.com',
+        'V': 'https://logo.clearbit.com/visa.com',
+        'PG': 'https://logo.clearbit.com/pg.com',
+        'UNH': 'https://logo.clearbit.com/unitedhealthgroup.com',
+        'MA': 'https://logo.clearbit.com/mastercard.com',
+        'HD': 'https://logo.clearbit.com/homedepot.com',
+        'DIS': 'https://logo.clearbit.com/disney.com',
+        'BAC': 'https://logo.clearbit.com/bankofamerica.com',
+        'ADBE': 'https://logo.clearbit.com/adobe.com',
+        'CMCSA': 'https://logo.clearbit.com/comcast.com',
+        'XOM': 'https://logo.clearbit.com/exxonmobil.com',
+        'VZ': 'https://logo.clearbit.com/verizon.com',
+        'NFLX': 'https://logo.clearbit.com/netflix.com',
+        'CRM': 'https://logo.clearbit.com/salesforce.com',
+        'PYPL': 'https://logo.clearbit.com/paypal.com',
+        'INTC': 'https://logo.clearbit.com/intel.com',
+        'TMO': 'https://logo.clearbit.com/thermofisher.com',
+        'COST': 'https://logo.clearbit.com/costco.com',
+        'CSCO': 'https://logo.clearbit.com/cisco.com',
+        'PEP': 'https://logo.clearbit.com/pepsico.com',
+    }
+    return logo_mapping.get(ticker, None)
+
+
+def get_company_name(ticker):
+    """Get full company name for a stock ticker."""
+    company_mapping = {
+        'AAPL': 'Apple Inc.',
+        'MSFT': 'Microsoft Corporation',
+        'GOOGL': 'Alphabet Inc.',
+        'GOOG': 'Alphabet Inc.',
+        'AMZN': 'Amazon.com Inc.',
+        'META': 'Meta Platforms Inc.',
+        'FB': 'Meta Platforms Inc.',
+        'TSLA': 'Tesla Inc.',
+        'NVDA': 'NVIDIA Corporation',
+        'JPM': 'JPMorgan Chase & Co.',
+        'JNJ': 'Johnson & Johnson',
+        'V': 'Visa Inc.',
+        'PG': 'The Procter & Gamble Company',
+        'UNH': 'UnitedHealth Group Inc.',
+        'MA': 'Mastercard Incorporated',
+        'HD': 'The Home Depot Inc.',
+        'DIS': 'The Walt Disney Company',
+        'BAC': 'Bank of America Corp.',
+        'ADBE': 'Adobe Inc.',
+        'CMCSA': 'Comcast Corporation',
+        'XOM': 'Exxon Mobil Corporation',
+        'VZ': 'Verizon Communications Inc.',
+        'NFLX': 'Netflix Inc.',
+        'CRM': 'Salesforce Inc.',
+        'PYPL': 'PayPal Holdings Inc.',
+        'INTC': 'Intel Corporation',
+        'TMO': 'Thermo Fisher Scientific Inc.',
+        'COST': 'Costco Wholesale Corporation',
+        'CSCO': 'Cisco Systems Inc.',
+        'PEP': 'PepsiCo Inc.',
+        'ORCL': 'Oracle Corporation',
+        'RGTI': 'Rigetti Computing Inc.',
+        'RR': 'Rolls-Royce Holdings Plc',
+        'SOFI': 'SoFi Technologies Inc.',
+        'THAR': 'Tharimmune Inc.',
+    }
+    return company_mapping.get(ticker, ticker)  # Return ticker if not found
 
 
 def calculate_stock_stats(stock_data_df, ticker, current_date):
@@ -105,10 +187,18 @@ def calculate_stock_stats(stock_data_df, ticker, current_date):
 def main():
     st.set_page_config(
         page_title="Stock Analysis Dashboard",
-        page_icon="📈",
         layout="wide",
-        initial_sidebar_state="expanded"
+        initial_sidebar_state="collapsed"
     )
+    
+    # Hide the sidebar completely
+    st.markdown("""
+        <style>
+        section[data-testid="stSidebar"] {
+            display: none;
+        }
+        </style>
+    """, unsafe_allow_html=True)
     
     # Custom CSS for blue-black theme
     st.markdown("""
@@ -133,25 +223,149 @@ def main():
             border-radius: 10px;
             border: 1px solid #334155;
         }
-        .prediction-action {
-            text-align: center;
-            padding: 2rem;
-            margin: 1rem 0;
+        .prediction-card {
+            background-color: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(139, 147, 167, 0.15);
             border-radius: 10px;
-            font-size: 2rem;
-            font-weight: bold;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
         }
-        .action-BUY {
-            background-color: #1e40af;
-            color: white;
+        .prediction-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #E6EAF2;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.02em;
         }
-        .action-SHORT {
-            background-color: #991b1b;
-            color: white;
+        .probability-row {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(139, 147, 167, 0.1);
         }
-        .action-HOLD {
-            background-color: #475569;
-            color: white;
+        .probability-row:last-child {
+            border-bottom: none;
+        }
+        .probability-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #8B93A7;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .probability-value {
+            font-size: 32px;
+            font-weight: 600;
+            color: #E6EAF2;
+            letter-spacing: -0.02em;
+        }
+        .signal-summary-card {
+            background-color: rgba(30, 41, 59, 0.3);
+            border: 1px solid rgba(139, 147, 167, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 0;
+        }
+        .signal-summary-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #8B93A7;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+        .signal-summary-divider {
+            height: 1px;
+            background: rgba(139, 147, 167, 0.2);
+            margin: 0.5rem 0;
+        }
+        .signal-summary-row {
+            font-size: 15px;
+            color: #E6EAF2;
+            margin: 0.5rem 0;
+            line-height: 1.6;
+        }
+        .signal-action {
+            font-weight: 600;
+        }
+        .signal-buy {
+            color: #38C172;
+        }
+        .signal-short {
+            color: #E5533D;
+        }
+        .signal-hold {
+            color: #6B7280;
+        }
+        .stock-card-button {
+            background-color: #1e293b !important;
+            border: 2px solid #334155 !important;
+            border-radius: 12px !important;
+            padding: 1.5rem 1rem !important;
+            width: 100% !important;
+            height: 140px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            align-items: center !important;
+            cursor: pointer !important;
+            transition: all 0.3s ease !important;
+            color: #e0e0e0 !important;
+            font-weight: bold !important;
+            text-align: center !important;
+            box-shadow: none !important;
+        }
+        .stock-card-button:hover {
+            border-color: #3b82f6 !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+            background-color: #1e293b !important;
+        }
+        .stock-card-button.selected {
+            border-color: #3b82f6 !important;
+            background-color: #1e3a8a !important;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5) !important;
+        }
+        .stock-logo-img {
+            width: 60px !important;
+            height: 60px !important;
+            border-radius: 50% !important;
+            object-fit: contain !important;
+            margin-bottom: 0.5rem !important;
+            background-color: white !important;
+            padding: 5px !important;
+        }
+        .stock-card-container {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+        .stock-card-container::-webkit-scrollbar {
+            height: 8px;
+        }
+        .stock-card-container::-webkit-scrollbar-track {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        .stock-card-container::-webkit-scrollbar-thumb {
+            background: #3b82f6;
+            border-radius: 4px;
+        }
+        .stock-card-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            width: 100%;
+        }
+        .period-button-wrapper {
+            margin-bottom: 1rem;
+        }
+        .percentage-change-box {
+            display: inline-block;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -175,11 +389,61 @@ def main():
         st.error("No predictions available.")
         return
     
-    # Sidebar
-    st.sidebar.title("📊 Stock Analysis Dashboard")
+    # Initialize session state for stock selection
+    if 'selected_ticker' not in st.session_state:
+        st.session_state.selected_ticker = None
     
     available_tickers = sorted(predictions_df["Ticker"].unique().tolist())
-    selected_ticker = st.sidebar.selectbox("Select Stock", available_tickers)
+    
+    # Create stock cards section at the top
+    st.markdown('<h2 style="text-align: center; font-size: 3rem; margin-bottom: 1rem;">Stock Options</h2>', unsafe_allow_html=True)
+        
+    # Create horizontal scrollable row of stock cards - use all tickers, they'll fit in one row
+    num_cards = len(available_tickers)
+    cols = st.columns(num_cards)
+    
+    for idx, ticker in enumerate(available_tickers):
+        with cols[idx]:
+            is_selected = st.session_state.selected_ticker == ticker
+            button_key = f"stock_card_{ticker}"
+            
+            # Wrapper div for consistent alignment
+            st.markdown('<div class="stock-card-wrapper">', unsafe_allow_html=True)
+            
+            # Display circular logo with first letter for all stocks (larger size)
+            st.markdown(f'''
+            <div style="width: 75px; height: 75px; border-radius: 50%; 
+                        background: linear-gradient(135deg, #3b82f6, #1e3a8a); 
+                        display: flex; align-items: center; justify-content: center; 
+                        font-size: 30px; font-weight: bold; color: white; 
+                        margin: 0 auto 0.5rem auto;">{ticker[0]}</div>
+            ''', unsafe_allow_html=True)
+            
+            # Clickable button with larger font
+            st.markdown(f"""
+            <style>
+            button[key="{button_key}"] {{
+                font-size: 16px !important;
+                padding: 0.9rem !important;
+                min-height: 50px !important;
+            }}
+            </style>
+            """, unsafe_allow_html=True)
+            
+            if st.button(ticker, key=button_key, use_container_width=True):
+                st.session_state.selected_ticker = ticker
+                st.rerun()
+            
+            # Close wrapper div
+            st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Use the selected ticker from stock cards
+    if st.session_state.selected_ticker and st.session_state.selected_ticker in available_tickers:
+        selected_ticker = st.session_state.selected_ticker
+    else:
+        # Default to first ticker if none selected
+        selected_ticker = available_tickers[0]
+        st.session_state.selected_ticker = selected_ticker
     
     # Get prediction for selected ticker
     ticker_pred = predictions_df[predictions_df["Ticker"] == selected_ticker]
@@ -196,123 +460,247 @@ def main():
     flat_prob = pred_row["Flat"]
     up_prob = pred_row["Up"]
     
-    # Main content
-    st.title(f"Stock Analysis: {selected_ticker}")
-    st.markdown(f"**Current Price:** ${current_price:.2f} | **Date:** {current_date}")
-    
     # Movement History Section
-    st.header("📈 Movement History")
+    # Initialize selected period in session state
+    if 'selected_period' not in st.session_state:
+        st.session_state.selected_period = "ytd"
+        st.session_state.period_label = "YTD"
     
-    col1, col2, col3, col4, col5 = st.columns(5)
-    
-    periods = {
-        "1 Day": 1,
-        "15 Days": 15,
-        "1 Month": 30,
-        "5 Years": 1825,
-        "Max": None
-    }
-    
-    selected_period = None
-    period_label = None
-    
-    with col1:
-        if st.button("1 Day"):
-            selected_period = 1
-            period_label = "1 Day"
-    with col2:
-        if st.button("15 Days"):
-            selected_period = 15
-            period_label = "15 Days"
-    with col3:
-        if st.button("1 Month"):
-            selected_period = 30
-            period_label = "1 Month"
-    with col4:
-        if st.button("5 Years"):
-            selected_period = 1825
-            period_label = "5 Years"
-    with col5:
-        if st.button("Max"):
-            selected_period = None
-            period_label = "Max"
-    
-    # Default to Max
-    if selected_period is None and period_label is None:
-        selected_period = None
-        period_label = "Max"
-    
-    # Calculate period
+    # Calculate period for percentage change (need this before displaying company name)
     end_date = pd.to_datetime(current_date)
-    if selected_period is None:
-        start_date = stock_data_df["Date"].min()
+    if st.session_state.selected_period == "ytd":
+        start_date = pd.to_datetime(f"{end_date.year}-01-01")
+    elif st.session_state.selected_period is not None:
+        start_date = end_date - timedelta(days=st.session_state.selected_period)
     else:
-        start_date = end_date - timedelta(days=selected_period)
+        start_date = stock_data_df["Date"].min()
     
+    _, pct_change_top = get_stock_data_for_period(stock_data_df, selected_ticker, start_date, end_date)
+    
+    # Main content - Company name and ticker with percentage change box
+    company_name = get_company_name(selected_ticker)
+    
+    st.markdown(f"<h1 style='margin-bottom: 0.2rem;'>{company_name}</h1>", unsafe_allow_html=True)
+    
+    # Create columns for ticker and percentage change box on same line
+    ticker_col, change_box_col = st.columns([2, 1])
+    
+    with ticker_col:
+        st.markdown(f"<p style='font-size: 1.8rem; color: #94a3b8; margin-top: 0;'>{selected_ticker}</p>", unsafe_allow_html=True)
+    
+    with change_box_col:
+        if pct_change_top is not None:
+            color_top = "#10b981" if pct_change_top >= 0 else "#ef4444"
+            triangle_top = "▲" if pct_change_top >= 0 else "▼"
+            change_text_top = f"{triangle_top} {pct_change_top:+.2f}%"
+            st.markdown(f'<div class="percentage-change-box" style="color: {color_top}; font-size: 1.8rem; font-weight: bold;">{change_text_top}</div>', unsafe_allow_html=True)
+    
+    st.markdown(f"<p style='font-size: 1.2rem;'>Current Price: ${current_price:.2f} | Date: {current_date}</p>", unsafe_allow_html=True)
+    
+    # Button configuration
+    period_buttons = [
+        ("1D", 1, "1 Day"),
+        ("15D", 15, "15 Days"),
+        ("1M", 30, "1 Month"),
+        ("5Y", 1825, "5 Years"),
+        ("YTD", "ytd", "YTD")
+    ]
+    
+    # Create wrapper container for period buttons
+    st.markdown('<div class="period-button-wrapper">', unsafe_allow_html=True)
+    
+    # Create columns with buttons on the left, space on right
+    col_btn1, col_btn2, col_btn3, col_btn4, col_btn5, col_right = st.columns([1, 1, 1, 1, 1, 3])
+    
+    # Create buttons with wrapper divs for selected state
+    button_cols = [col_btn1, col_btn2, col_btn3, col_btn4, col_btn5]
+    
+    for idx, (label, period_val, full_label) in enumerate(period_buttons):
+        with button_cols[idx]:
+            is_selected = st.session_state.selected_period == period_val
+            button_key = f"period_btn_{label}"
+            
+            if st.button(label, key=button_key, use_container_width=True):
+                st.session_state.selected_period = period_val
+                st.session_state.period_label = full_label
+                st.rerun()
+    
+    with col_right:
+        st.write("")  # Empty space on right
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Add CSS for period buttons - styling based on selection
+    period_css = ""
+    for idx, (label, period_val, full_label) in enumerate(period_buttons):
+        is_selected = st.session_state.selected_period == period_val
+        if is_selected:
+            bg_color = "#000000"
+            text_color = "#ffffff"
+            hover_bg = "#1a1a1a"
+        else:
+            bg_color = "#334155"
+            text_color = "#e0e0e0"
+            hover_bg = "#475569"
+        
+        # Target buttons in period-button-wrapper by column position
+        period_css += f"""
+        .period-button-wrapper div[data-testid="column"]:nth-of-type({idx + 1}) button {{
+            background-color: {bg_color} !important;
+            color: {text_color} !important;
+            border: none !important;
+            border-radius: 25px !important;
+            padding: 0.3rem 0.7rem !important;
+            font-weight: bold !important;
+            font-size: 12px !important;
+            transition: all 0.2s ease !important;
+        }}
+        .period-button-wrapper div[data-testid="column"]:nth-of-type({idx + 1}) button:hover {{
+            background-color: {hover_bg} !important;
+        }}
+        """
+    
+    if period_css:
+        st.markdown(f"<style>{period_css}</style>", unsafe_allow_html=True)
+    
+    selected_period = st.session_state.selected_period
+    period_label = st.session_state.period_label
+    
+    # Calculate period (reuse the calculation from above)
     period_data, pct_change = get_stock_data_for_period(stock_data_df, selected_ticker, start_date, end_date)
     
     if period_data is not None and len(period_data) > 0:
+        # Display period label only (percentage change moved to top)
+        st.markdown(f"**{period_label}**")
+        
         fig = go.Figure()
         fig.add_trace(go.Scatter(
             x=period_data["Date"],
             y=period_data["Adj Close"],
             mode='lines',
             name=selected_ticker,
-            line=dict(color='#3b82f6', width=2)
+            line=dict(color='#3b82f6', width=2),
+            fill='tozeroy',
+            fillcolor='rgba(59, 130, 246, 0.3)'
         ))
-        fig.update_layout(
-            title=f"Price Movement - {period_label}",
-            xaxis_title="Date",
-            yaxis_title="Price ($)",
-            template="plotly_dark",
-            height=400,
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)'
-        )
-        st.plotly_chart(fig, use_container_width=True)
+        # Set x-axis format based on period - time format only for 1 Day
+        if selected_period == 1:
+            xaxis_format = dict(tickformat='%I:%M %p')
+        else:
+            xaxis_format = dict(tickformat='%b %d, %Y')
         
-        # Show % change
-        if pct_change is not None:
-            color = "green" if pct_change >= 0 else "red"
-            st.markdown(f"<p style='text-align: right; color: {color}; font-size: 1.2rem;'><b>Change: {pct_change:+.2f}%</b></p>", unsafe_allow_html=True)
-    
-    # Prediction Section
-    st.header("🔮 Prediction Analysis")
-    
-    col1, col2 = st.columns([2, 1])
-    
-    with col1:
-        # Pie chart
-        fig_pie = go.Figure(data=[go.Pie(
-            labels=['Rise', 'Neutral', 'Fall'],
-            values=[up_prob * 100, flat_prob * 100, down_prob * 100],
-            marker=dict(colors=['#3b82f6', '#64748b', '#ef4444']),
-            hole=0.4,
-            textinfo='label+percent',
-            textfont=dict(size=14, color='white')
-        )])
-        fig_pie.update_layout(
-            title="Price Movement Probability",
+        fig.update_layout(
+            title="",
+            xaxis_title="",
+            yaxis_title="",
             template="plotly_dark",
             height=400,
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='white')
+            xaxis=xaxis_format,
+            margin=dict(t=10)
         )
-        st.plotly_chart(fig_pie, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # Prediction Section
+    st.markdown('<h2 style="text-align: center; font-size: 3rem; margin-bottom: 1rem; margin-top: 2rem;">Prediction Analysis</h2>', unsafe_allow_html=True)
+    st.markdown('<div class="prediction-card">', unsafe_allow_html=True)
+    
+    # Determine dominant probability for hierarchical coloring (outside columns)
+    probs = {'Fall': down_prob, 'Rise': up_prob, 'Neutral': flat_prob}
+    dominant = max(probs, key=probs.get)
+    
+    # Muted hierarchical color strategy - only dominant gets strong color
+    if dominant == 'Fall':
+        fall_color = '#E5533D'  # Strong red for dominant
+        rise_color = '#38C172'  # Muted green
+        neutral_color = '#6B7280'  # Muted gray
+    elif dominant == 'Rise':
+        fall_color = '#D8574A'  # Muted red
+        rise_color = '#38C172'  # Strong green for dominant
+        neutral_color = '#6B7280'  # Muted gray
+    else:
+        fall_color = '#D8574A'  # Muted red
+        rise_color = '#38C172'  # Muted green
+        neutral_color = '#6B7280'  # Strong gray for dominant
+    
+    col1, col2 = st.columns([1.2, 1])
+    
+    with col1:
+        # Donut chart with refined styling
+        fig_pie = go.Figure(data=[go.Pie(
+            labels=['Fall', 'Rise', 'Neutral'],
+            values=[down_prob * 100, up_prob * 100, flat_prob * 100],
+            marker=dict(
+                colors=[fall_color, rise_color, neutral_color],
+                line=dict(width=3, color='rgba(30, 41, 59, 1)')  # Gap between segments (matches card bg)
+            ),
+            hole=0.65,  # Increased hole size reduces ring thickness by ~30%
+            textinfo='none',
+            showlegend=False,
+            hovertemplate='%{label}<br>%{percent}<extra></extra>'
+        )])
+        fig_pie.update_layout(
+            template=None,
+            height=300,
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            margin=dict(l=0, r=0, t=0, b=0),
+            font=dict(family='system-ui, -apple-system, sans-serif')
+        )
+        st.plotly_chart(fig_pie, use_container_width=True, config={'displayModeBar': False})
     
     with col2:
-        st.markdown("### Probabilities")
-        st.metric("Rise", f"{up_prob*100:.1f}%")
-        st.metric("Neutral", f"{flat_prob*100:.1f}%")
-        st.metric("Fall", f"{down_prob*100:.1f}%")
+        # Probability summary
+        st.markdown(f"""
+        <div style="padding-top: 1rem;">
+            <div class="probability-row">
+                <span class="probability-label">Fall</span>
+                <span class="probability-value" style="color: {fall_color};">{down_prob*100:.1f}%</span>
+            </div>
+            <div class="probability-row">
+                <span class="probability-label">Rise</span>
+                <span class="probability-value" style="color: {rise_color};">{up_prob*100:.1f}%</span>
+            </div>
+            <div class="probability-row">
+                <span class="probability-label">Neutral</span>
+                <span class="probability-value" style="color: {neutral_color};">{flat_prob*100:.1f}%</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     
-    # Action Recommendation
-    action_class = f"action-{action}"
-    st.markdown(f'<div class="{action_class} prediction-action">{action}</div>', unsafe_allow_html=True)
+    # Signal Summary Card
+    max_prob = max(down_prob, up_prob, flat_prob)
+    if max_prob >= 0.6:
+        confidence_level = "High"
+    elif max_prob >= 0.4:
+        confidence_level = "Medium"
+    else:
+        confidence_level = "Low"
+    
+    action_color_class = {
+        'BUY': 'signal-buy',
+        'SHORT': 'signal-short',
+        'HOLD': 'signal-hold'
+    }.get(action, 'signal-hold')
+    
+    st.markdown(f"""
+    <div class="signal-summary-card">
+        <div class="signal-summary-label">Model Bias</div>
+        <div class="signal-summary-divider"></div>
+        <div class="signal-summary-row">
+            Signal: <span class="signal-action {action_color_class}">{action}</span>
+        </div>
+        <div class="signal-summary-row">
+            Confidence: {confidence_level} ({max_prob*100:.1f}%)
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # Model Variables Section
-    st.header("📋 Model Variables")
+    st.header("Model Variables")
     
     st.markdown("""
     The model uses the following key variables:
@@ -323,7 +711,7 @@ def main():
     """)
     
     # Economic Conditions Section
-    st.header("💼 Economic Conditions")
+    st.header("Economic Conditions")
     
     if economic_data:
         col1, col2, col3 = st.columns(3)
@@ -348,7 +736,7 @@ def main():
                     st.metric("Inflation Rate (Index)", f"{inflation_raw:.2f}")
     
     # Market Performance Section
-    st.header("📊 Market Performance (^GSPC)")
+    st.header("Market Performance (^GSPC)")
     
     if "^GSPC" in market_data:
         spx_data = market_data["^GSPC"]
@@ -375,7 +763,7 @@ def main():
         st.plotly_chart(fig_spx, use_container_width=True)
     
     # Backtest Statistics & Stock Info
-    st.header("📊 Backtest Statistics & Stock Information")
+    st.header("Backtest Statistics & Stock Information")
     
     col1, col2 = st.columns(2)
     

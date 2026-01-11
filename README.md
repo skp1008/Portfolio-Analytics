@@ -33,7 +33,10 @@ Get a free FRED API key from: https://fred.stlouisfed.org/docs/api/api_key.html
 
 ### 3. Run the Application
 
+**Important:** Make sure you're in the `Portfolio-Analytics` directory before running the launcher.
+
 ```bash
+cd Portfolio-Analytics
 python launcher.py
 ```
 
