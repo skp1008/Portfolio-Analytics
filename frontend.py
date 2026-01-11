@@ -396,7 +396,7 @@ def main():
     available_tickers = sorted(predictions_df["Ticker"].unique().tolist())
     
     # Create stock cards section at the top
-    st.markdown('<h2 style="text-align: center; font-size: 3rem; margin-bottom: 1rem;">Stock Options</h2>', unsafe_allow_html=True)
+    st.markdown('<h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 1rem;">Stock Options</h2>', unsafe_allow_html=True)
         
     # Create horizontal scrollable row of stock cards - use all tickers, they'll fit in one row
     num_cards = len(available_tickers)
@@ -603,8 +603,8 @@ def main():
         st.plotly_chart(fig, use_container_width=True)
     
     # Prediction Section
-    st.markdown('<h2 style="text-align: center; font-size: 3rem; margin-bottom: 1rem; margin-top: 2rem;">Prediction Analysis</h2>', unsafe_allow_html=True)
     st.markdown('<div class="prediction-card">', unsafe_allow_html=True)
+    st.markdown('<div class="prediction-title">Prediction Analysis</div>', unsafe_allow_html=True)
     
     # Determine dominant probability for hierarchical coloring (outside columns)
     probs = {'Fall': down_prob, 'Rise': up_prob, 'Neutral': flat_prob}
