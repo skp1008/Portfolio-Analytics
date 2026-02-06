@@ -110,14 +110,15 @@ def run_model():
             fred_api_key=FRED_API_KEY
         )
         
-        # Convert DataFrames to dicts for JSON serialization
+        # Convert DataFrames to dicts for JSON serialization (everything the frontend needs)
         results_serializable = {
             "predictions": results["predictions"].to_dict('records'),
             "backtest_results": results["backtest_results"],
             "economic_data": results["economic_data"],
             "market_data": results["market_data"],
             "stock_data": results["stock_data"].to_dict('records'),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
+            "model_run_date": results.get("model_run_date")
         }
         
         # Save cache

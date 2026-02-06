@@ -492,12 +492,16 @@ def run_model(
         stock_data_result["Date"] = pd.to_datetime(stock_data_result["Date"])
         stock_data_result["Date"] = stock_data_result["Date"].dt.strftime("%Y-%m-%d")
     
+    # Model run date (when this run completed) for display
+    model_run_date = datetime.now().strftime("%Y-%m-%d %H:%M")
+    
     return {
         "predictions": predictions_df,
         "backtest_results": backtest_results,
         "economic_data": latest_economic,
         "market_data": market_data_dict,
-        "stock_data": stock_data_result
+        "stock_data": stock_data_result,
+        "model_run_date": model_run_date
     }
 
 
