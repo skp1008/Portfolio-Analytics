@@ -168,9 +168,9 @@
   "economic_data": {
     "Date": "2026-01-01",
     "Interest_Rate": 3.64,
-    "Inflation_Rate": NaN,
-    "Unemployment_Rate": NaN,
-    "Inflation_YoY": NaN
+    "Inflation_Rate": null,
+    "Unemployment_Rate": null,
+    "Inflation_YoY": null
   },
   "market_data": {
     "^GSPC": {

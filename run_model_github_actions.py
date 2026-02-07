@@ -6,6 +6,7 @@ This script is designed to run in GitHub Actions and save results to cached_resu
 import sys
 import os
 import json
+import math
 from datetime import datetime
 
 # Add current directory to path
@@ -66,6 +67,18 @@ def main():
             "timestamp": datetime.now().isoformat(),
             "model_run_date": results.get("model_run_date")
         }
+
+        # JSON does not allow NaN; convert to None so it becomes null
+        def sanitize_for_json(obj):
+            if isinstance(obj, dict):
+                return {k: sanitize_for_json(v) for k, v in obj.items()}
+            if isinstance(obj, list):
+                return [sanitize_for_json(v) for v in obj]
+            if isinstance(obj, float) and (math.isnan(obj) or math.isinf(obj)):
+                return None
+            return obj
+
+        results_serializable = sanitize_for_json(results_serializable)
         
         # Save to public directory for Vercel to serve
         output_dir = "public"
