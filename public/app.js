@@ -11,92 +11,107 @@ const periods = {
     'Max': null
 };
 
-// Load data from JSON file
-function isHtmlResponse(text) {
-    const t = text.trim().replace(/^\uFEFF/, '');
-    return t.startsWith('<') || /<\s*!?\s*DOCTYPE/i.test(t) || /<\s*html[\s>]/i.test(t);
-}
-
+// Load data from JSON file - SIMPLIFIED VERSION
 async function loadData() {
+    console.log('🔄 Starting to load data...');
+    
     try {
+        // Fetch the JSON file
+        console.log('📡 Fetching /cached_results.json...');
         const response = await fetch('/cached_results.json');
         
-        // Check HTTP status first
+        console.log('📥 Response status:', response.status, response.statusText);
+        console.log('📥 Content-Type:', response.headers.get('content-type'));
+        
         if (!response.ok) {
-            console.error('Fetch failed:', response.status, response.statusText);
-            throw new Error('DATA_NOT_AVAILABLE');
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         
+        // Get the text
         const text = await response.text();
-        console.log('Response received, length:', text.length, 'starts with:', text.substring(0, 50));
-
-        // If we got HTML (e.g. 404 or SPA fallback), show friendly message
-        if (isHtmlResponse(text)) {
-            console.error('Received HTML instead of JSON');
-            throw new Error('DATA_NOT_AVAILABLE');
-        }
-
-        let appDataParsed;
-        try {
-            appDataParsed = JSON.parse(text);
-        } catch (parseErr) {
-            console.error('JSON parse error:', parseErr.message);
-            // Often "Unexpected token '<'" when server returned HTML
-            if (/Unexpected token|is not valid JSON/i.test(parseErr.message)) {
-                throw new Error('DATA_NOT_AVAILABLE');
-            }
-            throw parseErr;
+        console.log('✅ Got response text, length:', text.length);
+        console.log('📄 First 100 chars:', text.substring(0, 100));
+        
+        // Parse JSON
+        console.log('🔍 Parsing JSON...');
+        appData = JSON.parse(text);
+        console.log('✅ JSON parsed successfully!');
+        console.log('📊 Data keys:', Object.keys(appData));
+        console.log('📊 Predictions count:', appData.predictions?.length || 0);
+        
+        // Validate we have predictions
+        if (!appData.predictions || !Array.isArray(appData.predictions) || appData.predictions.length === 0) {
+            console.error('❌ No predictions found in data');
+            console.error('📊 Full data structure:', appData);
+            throw new Error('No predictions in data file');
         }
         
-        console.log('JSON parsed successfully. Predictions:', appDataParsed.predictions?.length || 0);
-        appData = appDataParsed;
-
-        // Check for placeholder or empty data
-        if (!appData.predictions || appData.predictions.length === 0) {
-            console.error('No predictions in data:', appData);
-            throw new Error('DATA_NOT_AVAILABLE');
-        }
-
         // Initialize with first ticker
         const tickers = [...new Set(appData.predictions.map(p => p.Ticker))].sort();
         selectedTicker = tickers[0];
-        console.log('Data loaded successfully. Tickers:', tickers);
+        console.log('✅ Data loaded successfully! Tickers:', tickers);
+        console.log('📊 First prediction:', appData.predictions[0]);
 
+        // Hide loading, show content
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('error').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+        
+        // Render everything
         renderAll();
+        
     } catch (error) {
-        console.error('loadData error:', error);
+        console.error('❌ ERROR loading data:', error);
+        console.error('❌ Error details:', {
+            message: error.message,
+            stack: error.stack,
+            name: error.name
+        });
+        
+        // Show error
         document.getElementById('loading').style.display = 'none';
         document.getElementById('error').style.display = 'block';
-        if (error.message === 'DATA_NOT_AVAILABLE') {
-            document.getElementById('error').innerHTML = [
-                'No model data available yet.',
-                'Run the <strong>Daily Model Run</strong> workflow in the GitHub Actions tab of this repo to generate results.',
-                'After it completes (~5–6 min), refresh this page.'
-            ].join(' ');
-        } else {
-            document.getElementById('error').textContent = `Error loading data: ${error.message}`;
-        }
+        document.getElementById('content').style.display = 'none';
+        
+        document.getElementById('error').innerHTML = `
+            <div style="color: #ef4444; font-weight: 600; margin-bottom: 1rem;">
+                Error loading data: ${error.message}
+            </div>
+            <div style="color: #94a3b8; font-size: 0.875rem;">
+                Check the browser console (F12) for details.
+            </div>
+        `;
     }
 }
 
 function renderAll() {
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('content').style.display = 'block';
+    console.log('🎨 Rendering all components...');
+    
+    if (!appData) {
+        console.error('❌ Cannot render: appData is null');
+        return;
+    }
     
     // Model run date
     if (appData.model_run_date) {
         document.getElementById('modelRunDate').textContent = `Model run: ${appData.model_run_date}`;
     }
     
-    renderStockSelection();
-    renderStockSummary();
-    renderPeriodButtons();
-    renderPriceChart();
-    renderPrediction();
-    renderMarketChart();
-    renderBacktestMetrics();
-    renderStockMetrics();
-    renderEconomicMetrics();
+    try {
+        renderStockSelection();
+        renderStockSummary();
+        renderPeriodButtons();
+        renderPriceChart();
+        renderPrediction();
+        renderMarketChart();
+        renderBacktestMetrics();
+        renderStockMetrics();
+        renderEconomicMetrics();
+        console.log('✅ All components rendered successfully!');
+    } catch (error) {
+        console.error('❌ Error rendering components:', error);
+        throw error;
+    }
 }
 
 function renderStockSelection() {
